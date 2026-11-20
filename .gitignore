@@ -1,0 +1,35 @@
+# --- Secrets: never commit these. Copy .env.example -> .env instead. ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Java / Maven ---
+backend/target/
+*.class
+*.log
+hs_err_pid*
+!backend/.mvn/wrapper/maven-wrapper.jar
+
+# --- Node / Vite ---
+node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+*.tsbuildinfo
+
+# --- Report build intermediates ---
+docs/report-build/
+
+# --- IDEs / OS ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# --- Deploy CLIs ---
+.vercel/
