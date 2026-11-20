@@ -1,0 +1,106 @@
+# Continuous integration: every push and pull request builds everything and runs every test.
+# Three jobs run in parallel; a red X on GitHub means one of them failed.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (unit + Testcontainers integration tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      # GitHub's Ubuntu runners have Docker, so Testcontainers can start a real Postgres 16.
+      - name: Build and test
+        working-directory: backend
+        run: ./mvnw -B verify
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/target/site/jacoco/
+
+  frontend:
+    name: Frontend (typecheck + Vitest + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: End-to-end smoke test (Playwright, real backend)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: campusoa
+          POSTGRES_USER: campusoa
+          POSTGRES_PASSWORD: campusoa
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U campusoa" --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build backend jar
+        working-directory: backend
+        run: ./mvnw -B -DskipTests package
+      - name: Start backend (dev profile = demo data)
+        run: |
+          nohup java -Dspring.profiles.active=dev -jar backend/target/campusoa.jar > backend.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/actuator/health && exit 0
+            sleep 2
+          done
+          cat backend.log; exit 1
+        env:
+          ALLOWED_EMAIL_DOMAINS: example.edu
+      - name: Install frontend deps and browser
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run Playwright
+        working-directory: frontend
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report/
+            backend.log

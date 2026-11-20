@@ -20,6 +20,28 @@ export default defineConfig({
       '/actuator': proxied,
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split rarely-changing libraries into their own files: after a deploy, browsers keep
+        // the cached vendor chunks and only download our (small) app code again.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router'],
+          query: ['@tanstack/react-query'],
+          markdown: ['react-markdown', 'rehype-sanitize'],
+        },
+      },
+    },
+  },
+  // `vite preview` (used by the Playwright E2E test) serves the production build with the same proxy.
+  preview: {
+    port: 4173,
+    proxy: {
+      '/api': proxied,
+      '/oauth2': proxied,
+      '/login/oauth2': proxied,
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
