@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Small set of reusable component classes, so pages stay readable. */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-ghost {
+    @apply btn border border-slate-300 bg-transparent hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+  }
+  .input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400
+      focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30
+      dark:border-slate-700 dark:bg-slate-900;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700
+      dark:bg-slate-800 dark:text-slate-300;
+  }
+  .page-title {
+    @apply text-2xl font-bold tracking-tight;
+  }
+  .muted {
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
+  .prose-md h1,
+  .prose-md h2,
+  .prose-md h3 {
+    @apply mb-2 mt-4 font-semibold;
+  }
+  .prose-md h2 {
+    @apply text-lg;
+  }
+  .prose-md p {
+    @apply my-2 leading-relaxed;
+  }
+  .prose-md ul {
+    @apply my-2 list-disc pl-5;
+  }
+  .prose-md ol {
+    @apply my-2 list-decimal pl-5;
+  }
+  .prose-md code {
+    @apply rounded bg-slate-100 px-1 py-0.5 text-[0.85em] dark:bg-slate-800;
+  }
+  .prose-md pre {
+    @apply my-3 overflow-x-auto rounded-xl bg-slate-900 p-3 text-slate-100;
+  }
+  .prose-md pre code {
+    @apply bg-transparent p-0;
+  }
+  .prose-md a {
+    @apply text-brand-600 underline dark:text-brand-100;
+  }
+  .prose-md blockquote {
+    @apply my-2 border-l-4 border-slate-300 pl-3 italic dark:border-slate-700;
+  }
+}
