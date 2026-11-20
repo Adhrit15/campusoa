@@ -1,0 +1,18 @@
+# Test profile: deterministic settings, independent of whatever is in your local .env.
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+app:
+  allowed-email-domains: student.example.edu
+  admin-emails: boss@student.example.edu
+  public-url: http://localhost:5173
+  frontend-origin: http://localhost:5173
+  rate-limit:
+    writes-per-minute: 1000
+  scraper:
+    enabled: false

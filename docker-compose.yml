@@ -1,0 +1,53 @@
+# Local development stack.
+#   docker compose up -d db          -> only Postgres (run backend/frontend from your IDE/terminal)
+#   docker compose up --build        -> Postgres + backend + frontend (http://localhost:5173)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: campusoa
+      POSTGRES_USER: campusoa
+      POSTGRES_PASSWORD: campusoa
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campusoa -d campusoa"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_URL: jdbc:postgresql://db:5432/campusoa
+      DATABASE_USERNAME: campusoa
+      DATABASE_PASSWORD: campusoa
+      APP_PUBLIC_URL: http://localhost:5173
+      FRONTEND_ORIGIN: http://localhost:5173
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - backend
+    environment:
+      VITE_PROXY_TARGET: http://backend:8080
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+
+volumes:
+  pgdata:

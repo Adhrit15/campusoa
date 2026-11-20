@@ -1,0 +1,31 @@
+# Production profile (Render). Everything comes from environment variables; nothing has a default
+# that could silently leak into production.
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${APP_PUBLIC_URL}/login/oauth2/code/google
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+app:
+  public-url: ${APP_PUBLIC_URL}
+  frontend-origin: ${FRONTEND_ORIGIN}
+  scraper:
+    enabled: ${SCRAPER_ENABLED:true}
+
+logging:
+  level:
+    in.campusoa: INFO

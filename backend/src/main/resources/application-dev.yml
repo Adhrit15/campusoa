@@ -1,0 +1,8 @@
+# Local development profile: activated with SPRING_PROFILES_ACTIVE=dev (docker compose does this).
+# Loads clearly-marked demo users/posts from db/demo on top of the real migrations.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+logging:
+  level:
+    in.campusoa: DEBUG

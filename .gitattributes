@@ -1,0 +1,8 @@
+# Normalise line endings so Linux containers/CI and Windows checkouts agree.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.pdf binary
+*.jar binary

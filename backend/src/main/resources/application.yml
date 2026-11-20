@@ -1,0 +1,103 @@
+# Shared configuration. Every secret or environment-specific value comes from an environment
+# variable (see /.env.example); the value after the colon is only a safe local default.
+spring:
+  application:
+    name: campusoa
+  config:
+    # For `./mvnw spring-boot:run`: read KEY=value pairs from the repo-root .env (if present),
+    # so you don't have to export variables by hand. Real env vars still win.
+    import: optional:file:../.env[.properties]
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/campusoa}
+    username: ${DATABASE_USERNAME:campusoa}
+    password: ${DATABASE_PASSWORD:campusoa}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}   # Neon free tier limits connections; 5 is plenty here
+  jpa:
+    open-in-view: false            # no lazy loading from controllers: forces services to load what they need
+    hibernate:
+      ddl-auto: validate           # Flyway owns the schema; Hibernate only checks entities match it
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  session:
+    timeout: 14d                   # stay signed in for two weeks
+    jdbc:
+      initialize-schema: never     # tables are created by Flyway (V4__spring_session.sql)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:not-configured}
+            client-secret: ${GOOGLE_CLIENT_SECRET:not-configured}
+            scope: openid,profile,email
+            # Explicit, because behind the Vercel proxy the backend can't reliably guess its public URL.
+            redirect-uri: ${APP_PUBLIC_URL:http://localhost:5173}/login/oauth2/code/google
+  data:
+    web:
+      pageable:
+        max-page-size: 50          # ?size=10000 is silently clamped to 50
+        default-page-size: 20
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework   # trust X-Forwarded-* from Render/Vercel proxies
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${COOKIE_SECURE:false}   # true in production (HTTPS)
+  error:
+    whitelabel:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /api/docs/openapi.json
+  swagger-ui:
+    path: /api/docs
+
+app:
+  # Comma-separated. Empty means "nobody can sign up" (fail closed), so set it!
+  allowed-email-domains: ${ALLOWED_EMAIL_DOMAINS:}
+  admin-emails: ${ADMIN_EMAILS:}
+  public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+  frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+  timezone: Asia/Kolkata
+  rate-limit:
+    writes-per-minute: ${RATE_LIMIT_WRITES_PER_MINUTE:30}
+  moderation:
+    auto-hide-report-threshold: 3
+  scraper:
+    enabled: ${SCRAPER_ENABLED:false}
+    url: https://www.cbit.ac.in/placement_post/notice-board/
+    robots-url: https://www.cbit.ac.in/robots.txt
+    # Set SCRAPER_USER_AGENT to include your repo URL so the site owner can contact you.
+    user-agent: ${SCRAPER_USER_AGENT:CampusOABot/1.0 (unofficial student project; polite, 4 requests/day)}
+    cron: "0 0 */6 * * *"
+    min-interval: 6h
+    timeout: 15s
+
+logging:
+  level:
+    in.campusoa: INFO
