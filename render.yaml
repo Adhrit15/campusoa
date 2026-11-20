@@ -1,0 +1,40 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repo. Render reads this file
+# and creates the service. Values marked `sync: false` are secrets: Render asks you to type them
+# in the dashboard, so they never live in Git.
+services:
+  - type: web
+    name: campusoa-api
+    runtime: docker
+    plan: free
+    region: singapore          # closest Render region to Hyderabad
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeploy: true           # every push to main redeploys
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL       # jdbc:postgresql://<neon-host>/<db>?sslmode=require
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: ALLOWED_EMAIL_DOMAINS
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: APP_PUBLIC_URL     # the Vercel URL, e.g. https://campusoa.vercel.app
+        sync: false
+      - key: FRONTEND_ORIGIN    # same as APP_PUBLIC_URL
+        sync: false
+      - key: SCRAPER_ENABLED
+        value: "true"
+      - key: SCRAPER_USER_AGENT
+        sync: false
+      - key: DB_POOL_SIZE
+        value: "5"
