@@ -70,7 +70,7 @@ CREATE INDEX ix_company_alias_company ON company_alias (company_id);
 CREATE TABLE placement_stat (
     id             bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     company_id     bigint       NOT NULL REFERENCES company (id) ON DELETE CASCADE,
-    academic_year  char(7)      NOT NULL CHECK (academic_year ~ '^[0-9]{4}-[0-9]{2}$'),
+    academic_year  varchar(7)     NOT NULL CHECK (academic_year ~ '^[0-9]{4}-[0-9]{2}$'),
     role_title     varchar(120) NOT NULL DEFAULT 'Full-time',
     ctc_min_lpa    numeric(6,2) CHECK (ctc_min_lpa > 0),
     ctc_max_lpa    numeric(6,2) NOT NULL CHECK (ctc_max_lpa > 0),
@@ -84,7 +84,7 @@ CREATE TABLE placement_stat (
 CREATE TABLE internship_stat (
     id                 bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     company_id         bigint       NOT NULL REFERENCES company (id) ON DELETE CASCADE,
-    academic_year      char(7)      NOT NULL CHECK (academic_year ~ '^[0-9]{4}-[0-9]{2}$'),
+    academic_year      varchar(7)     NOT NULL CHECK (academic_year ~ '^[0-9]{4}-[0-9]{2}$'),
     stipend_inr_month  integer      NOT NULL CHECK (stipend_inr_month > 0),
     source_url         varchar(300),
     source_note        varchar(200),
