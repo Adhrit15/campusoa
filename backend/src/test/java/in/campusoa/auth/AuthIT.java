@@ -42,6 +42,11 @@ class AuthIT extends IntegrationTest {
     }
 
     @Test
+    void devLoginDoesNotExistOutsideDevProfile() throws Exception {
+        mvc.perform(get("/api/dev/users")).andExpect(status().isNotFound());
+    }
+
+    @Test
     void loginStartRedirectsToGoogle() throws Exception {
         mvc.perform(get("/oauth2/authorization/google"))
                 .andExpect(status().is3xxRedirection())

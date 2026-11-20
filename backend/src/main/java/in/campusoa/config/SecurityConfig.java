@@ -57,6 +57,8 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/actuator/health/**", "/api/docs/**", "/error").permitAll()
+                    // Only has a controller in the "dev" profile (DevLoginController); 404 elsewhere.
+                    .requestMatchers("/api/dev/**").permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .requestMatchers("/api/mod/**").hasRole("MODERATOR")   // admins have ROLE_MODERATOR too
                     .requestMatchers(HttpMethod.GET, PUBLIC_READS).permitAll()
