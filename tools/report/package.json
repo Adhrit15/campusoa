@@ -1,0 +1,14 @@
+{
+  "name": "campusoa-report-builder",
+  "private": true,
+  "type": "module",
+  "description": "Builds REPORT.pdf from REPORT.md (cover, TOC, rendered Mermaid, page numbers).",
+  "scripts": {
+    "build": "node build-report.mjs"
+  },
+  "dependencies": {
+    "marked": "~15.0.12",
+    "mermaid": "~11.17.2",
+    "playwright": "~1.65.1"
+  }
+}

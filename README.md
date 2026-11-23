@@ -8,8 +8,10 @@ experiences with a searchable question bank, a prep tracker and opt-in leaderboa
 
 | | |
 |---|---|
-| **Live site** | _to be filled after deployment_ |
-| **API docs (Swagger)** | _live site_ `/api/docs` |
+| **Live site** | https://campusoa.vercel.app |
+| **API docs (Swagger)** | https://campusoa.vercel.app/api/docs |
+| **Backend health** | https://campusoa-api.onrender.com/actuator/health |
+| **Source** | https://github.com/Adhrit15/campusoa |
 | **CI** | GitHub Actions: backend (unit + Testcontainers), frontend (Vitest + build), Playwright E2E |
 
 <!-- Screenshots: replace these placeholders with real captures (phone + desktop, light + dark). -->

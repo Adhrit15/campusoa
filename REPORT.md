@@ -31,7 +31,7 @@ placements:
 | Website | https://campusoa.vercel.app |
 | API (behind the website) | https://campusoa.vercel.app/api/… (proxied to Render) |
 | Swagger UI | https://campusoa.vercel.app/api/docs |
-| Health check | https://campusoa.vercel.app/actuator/health is not proxied, so use the Render URL in §10 |
+| Backend (Render) | https://campusoa-api.onrender.com (health: `/actuator/health`) |
 | Source | https://github.com/Adhrit15/campusoa |
 
 **What works (verified).** All MVP features. The automated suite has **108 tests**: 51 backend
@@ -73,7 +73,9 @@ Times are approximate wall-clock times, including waiting for downloads.
 | M12 | `1f04b88` | Dockerfile, render.yaml, vercel.json, `PublicUrlFilter`, README, CONTRIBUTING, PRIVACY | **The important catch:** behind Vercel's proxy, Spring would rebuild the OAuth callback URL with Render's hostname. Spring Security compares that URL with the `redirect_uri` it sent Google, so every login would have failed. `PublicUrlFilter` pins scheme, host and port to `APP_PUBLIC_URL`. (~50 min) |
 | — | `43786ed` | Vercel CLI files ignored | The Vercel CLI created `frontend/.env.local`. It's ignored by both `.gitignore` files. |
 | — | `0c30861` | `fix(ci)` | The **first CI run failed**: `./mvnw: Permission denied`. Git on Windows had committed `mvnw` without the executable bit. Fixed with `git update-index --chmod=+x backend/mvnw`. |
-| CP4 | *(see §10.6)* | Deployment verification and URLs | |
+| — | `8f32e0d` | This report (first full draft) | |
+| CP3 | *(Render dashboard)* | Backend deployed from `render.yaml`. Neon was migrated by Flyway on first boot, and the scraper's first run imported 346 circulars. | `APP_PUBLIC_URL` was set to the localhost value. Caught by the checkpoint-4 checks (§10.6). |
+| CP4 | *(final docs commit)* | Live verification, URLs recorded, REPORT.pdf generated, GitHub Actions bumped to Node 24 action versions | |
 
 # 3. Architecture
 
@@ -443,12 +445,12 @@ sequenceDiagram
     B->>V: GET /login/oauth2/code/google?code&state
     V->>S: (proxied, with SESSION cookie)
     S->>S: check state matches session (blocks login CSRF)
-    S->>G: POST /token (code + client_secret + PKCE verifier) [server-to-server]
+    S->>G: POST /token with code, client_secret, PKCE verifier (server-to-server)
     G-->>S: id_token (signed JWT: sub, email, email_verified, name) + access_token
     S->>S: verify id_token signature (Google's public keys), issuer, audience, nonce, expiry
     S->>S: CampusOidcUserService: domain allow-list? banned? create/update app_user, role
-    S->>DB: new session id; store SecurityContext (AppUserPrincipal)
-    S-->>B: 302 to / with Set-Cookie: SESSION=...; HttpOnly; Secure; SameSite=Lax
+    S->>DB: new session id, store SecurityContext (AppUserPrincipal)
+    S-->>B: 302 to / with Set-Cookie SESSION (HttpOnly, Secure, SameSite=Lax)
     B->>V: GET /api/me (cookie sent automatically)
     V->>S: (proxied)
     S-->>B: 200 {id, role, ...}
@@ -457,7 +459,7 @@ sequenceDiagram
 The key points:
 
 - **The browser never sees the client secret or Google's tokens.** The code-for-token exchange
-  (step 11) happens server-to-server.
+  (step 10) happens server-to-server.
 - **`state`** ties the callback to the browser that started the flow, which stops an attacker from
   logging you into *their* account (login CSRF). **PKCE** and the **nonce** stop a stolen `code` or
   `id_token` from being replayed.
@@ -739,7 +741,20 @@ HikariCP is already a connection pool.
 
 ## 10.6 Deployment verification (checkpoint 4)
 
-*This section is completed after the Render deploy. See the final README/REPORT commit.*
+Checked from the command line after Render reported **Live** (23 Nov 2026):
+
+| Check | Result |
+|---|---|
+| `GET https://campusoa-api.onrender.com/actuator/health` | `{"status":"UP"}` |
+| `GET https://campusoa.vercel.app/` and a deep link (`/companies/microsoft`) | 200 (the SPA fallback works) |
+| `GET https://campusoa.vercel.app/api/companies` (through the Vercel rewrite) | 200, seeded companies with source labels |
+| `GET /api/drives` | **346 drives**: the scraper's startup run imported the live notice board |
+| `GET /api/me` while signed out | 401 JSON |
+| `GET /api/dev/users` | 404 (the dev-only login doesn't exist in prod) |
+| Security headers on the site | CSP, HSTS, nosniff and Referrer-Policy present |
+| Session cookie from the backend | `Secure; HttpOnly; SameSite=Lax` |
+| `GET /oauth2/authorization/google` | 302 to Google. **The first check showed `redirect_uri=http://localhost:5173/...`** because `APP_PUBLIC_URL` on Render had been copied from the local `.env`. The fix is to set `APP_PUBLIC_URL` and `FRONTEND_ORIGIN` to `https://campusoa.vercel.app` in Render → Environment. Lesson: **production and local configuration differ, and copying `.env` wholesale is a classic deploy bug.** |
+| Full Google sign-in with a college account | Has to be done by a human (I have no college Google account, and must not handle credentials) |
 
 # 11. Decisions & assumptions
 
